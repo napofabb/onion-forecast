@@ -1,0 +1,7 @@
+fastapi
+uvicorn
+pandas
+prophet
+supabase
+google-generativeai
+python-multipart
