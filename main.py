@@ -9,12 +9,12 @@ import google.generativeai as genai
 
 app = FastAPI()
 
-# --- CONFIGURATION (Akan ditarik dari Railway Environment Variables nanti) ---
+# --- CONFIGURATION ---
 SUPABASE_URL = os.environ.get("SUPABASE_URL")
 SUPABASE_KEY = os.environ.get("SUPABASE_KEY")
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
 
-# --- LOAD MODEL (Hanya sekali bila server start) ---
+# --- LOAD MODEL ---
 try:
     with open('fama_forecast_model.json', 'r') as fin:
         model = model_from_json(fin.read())
@@ -38,11 +38,8 @@ class ForecastRequest(BaseModel):
 def read_root():
     import os
     
-    # 1. Kita ambil semua senarai KUNCI (Key) yang server nampak
-    # Kita tak ambil value demi keselamatan, cuma nak tengok nama variable
+    # X-RAY SERVER: Check environment variables
     all_keys = list(os.environ.keys())
-    
-    # 2. Kita cari variable yang ada perkataan "GEMINI"
     gemini_related = [k for k in all_keys if "GEMINI" in k.upper()]
     
     return {
@@ -63,7 +60,7 @@ def predict_supply(req: ForecastRequest):
     # 2. Run prediction
     forecast = model.predict(future)
     
-    # 3. Ambil data 30 hari terakhir sahaja (masa depan)
+    # 3. Ambil data 30 hari terakhir sahaja
     next_30_days = forecast.tail(req.days)[['ds', 'yhat', 'yhat_lower', 'yhat_upper']]
     
     # Format date jadi string
@@ -80,8 +77,10 @@ def predict_supply(req: ForecastRequest):
 
     # 4. Generate AI Insight (Gemini)
     ai_insight = "Gemini key not found."
+    
     if GEMINI_API_KEY:
         try:
+            # Guna gemini-1.5-flash sebab quota dia besar & laju
             gemini_model = genai.GenerativeModel('gemini-1.5-flash')
             prompt = f"""
             Sebagai Data Analyst FAMA, analisa ramalan ini:
@@ -95,27 +94,18 @@ def predict_supply(req: ForecastRequest):
         except Exception as e:
             ai_insight = f"Error generating AI insight: {str(e)}"
 
+    # ✅ FIXED: Tutup kurungan JSON di sini
     return {
         "total_forecast": total_predicted_supply,
         "ai_analysis": ai_insight,
         "daily_data": results
-
-# --- DEBUGGING ENDPOINT: CHECK MODEL AVAILABLE ---
-@app.get("/check-models")
-def list_google_models():
-    try:
-        available_models = []
-        for m in genai.list_models():
-            if 'generateContent' in m.supported_generation_methods:
-                available_models.append(m.name)
-        return {"status": "OK", "models": available_models}
-    except Exception as e:
-        return {"status": "ERROR", "detail": str(e)
-
     }
 
-
-
-
-
-
+# --- DIAGNOSTIK: CHECK MODEL AVAILABLE ---
+@app.get("/check-models")
+def check_models():
+    try:
+        senarai_model = []
+        # Kita tanya Google: "Apa model yang kau ada?"
+        for m in genai.list_models():
+            if '
