@@ -81,7 +81,7 @@ def predict_supply(req: ForecastRequest):
     if GEMINI_API_KEY:
         try:
             # Guna gemini-1.5-flash sebab quota dia besar & laju
-            gemini_model = genai.GenerativeModel('gemini-2.0-flash')
+            gemini_model = genai.GenerativeModel('gemini-2.0-flash-lite-preview-02-05')
             prompt = f"""
             Sebagai Data Analyst FAMA, analisa ramalan ini:
             - Item: Bawang Besar India
@@ -113,4 +113,5 @@ def check_models():
         return {"status": "OK", "models": senarai_model}
     except Exception as e:
         return {"status": "ERROR", "detail": str(e)}
+
 
