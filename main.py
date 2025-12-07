@@ -110,9 +110,10 @@ def list_google_models():
                 available_models.append(m.name)
         return {"status": "OK", "models": available_models}
     except Exception as e:
-        return {"status": "ERROR", "detail": str(e)}
+        return {"status": "ERROR", "detail": str(e)
 
     }
+
 
 
 
