@@ -3,5 +3,5 @@ uvicorn
 pandas
 prophet
 supabase
-google-generativeai
 python-multipart
+google-generativeai>=0.8.3
