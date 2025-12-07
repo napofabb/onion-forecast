@@ -26,6 +26,7 @@ except Exception as e:
 # --- SETUP CLIENTS ---
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY) if SUPABASE_URL else None
 if GEMINI_API_KEY:
+    # Guna alias 'latest' atau model yang available
     genai.configure(api_key=GEMINI_API_KEY)
 
 # --- DATA STRUCTURE ---
@@ -37,20 +38,16 @@ class ForecastRequest(BaseModel):
 @app.get("/")
 def read_root():
     import os
-    
-    # X-RAY SERVER: Check environment variables
     all_keys = list(os.environ.keys())
     gemini_related = [k for k in all_keys if "GEMINI" in k.upper()]
-    
     return {
-        "status": "MODE X-RAY SERVER 🧐",
+        "status": "Server FAMA Online (Mode: Price Forecasting)",
         "adakah_kunci_ditemui": "YA" if os.environ.get("GEMINI_API_KEY") else "TIDAK",
-        "variable_gemini_yang_dijumpai": gemini_related,
-        "senarai_penuh_variable": all_keys
+        "variable_gemini_yang_dijumpai": gemini_related
     }
 
 @app.post("/predict")
-def predict_supply(req: ForecastRequest):
+def predict_price(req: ForecastRequest):
     if not model:
         raise HTTPException(status_code=500, detail="Model not loaded")
     
@@ -60,59 +57,70 @@ def predict_supply(req: ForecastRequest):
     # 2. Run prediction
     forecast = model.predict(future)
     
-    # 3. Ambil data 30 hari terakhir sahaja
-    next_30_days = forecast.tail(req.days)[['ds', 'yhat', 'yhat_lower', 'yhat_upper']]
+    # 3. Ambil data masa depan sahaja
+    next_days = forecast.tail(req.days)[['ds', 'yhat', 'yhat_lower', 'yhat_upper']]
     
-    # Format date jadi string
     results = []
-    total_predicted_supply = 0
     
-    for _, row in next_30_days.iterrows():
+    # KIRAAN KHAS UNTUK HARGA: Kita cari Purata (Average), bukan Total
+    average_predicted_price = next_days['yhat'].mean()
+    min_predicted_price = next_days['yhat'].min()
+    max_predicted_price = next_days['yhat'].max()
+    
+    for _, row in next_days.iterrows():
         val = row['yhat']
         results.append({
             "date": row['ds'].strftime('%Y-%m-%d'),
-            "prediction": val
+            "predicted_price": val
         })
-        total_predicted_supply += val
 
-    # 4. Generate AI Insight (Gemini)
+    # 4. Generate AI Insight (Gemini) - Context Harga
     ai_insight = "Gemini key not found."
     
     if GEMINI_API_KEY:
         try:
-            # Guna gemini-1.5-flash sebab quota dia besar & laju
+            # Guna flash-latest untuk elak error 404/Quota
             gemini_model = genai.GenerativeModel('gemini-flash-latest')
-            prompt = f"""
-            Sebagai Data Analyst FAMA, analisa ramalan ini:
-            - Item: Bawang Besar India
-            - Total Ramalan 30 Hari: {total_predicted_supply:.2f} Tan
             
-            Berikan 1 ayat ringkas trend supply ini dan 1 cadangan tindakan.
+            prompt = f"""
+            Bertindak sebagai Senior Data Analyst FAMA Malaysia.
+            Analisa data ramalan HARGA (Price Forecasting) untuk Bawang Besar India bagi {req.days} hari akan datang.
+            
+            DATA RAMALAN:
+            - Purata Harga Dijangka: RM {average_predicted_price:.2f} / kg
+            - Harga Tertinggi: RM {max_predicted_price:.2f} / kg
+            - Harga Terendah: RM {min_predicted_price:.2f} / kg
+            
+            TUGAS:
+            1. Nyatakan trend harga secara ringkas (Menaik/Menurun/Stabil).
+            2. Apa implikasi harga ini kepada pengguna atau peniaga?
+            3. Cadangkan satu tindakan untuk FAMA (contoh: Jualan Agro Madani, kawalan siling, atau pemantauan).
+            
+            JAWAPAN (Bahasa Melayu Professional):
             """
+            
             ai_response = gemini_model.generate_content(prompt)
             ai_insight = ai_response.text
         except Exception as e:
             ai_insight = f"Error generating AI insight: {str(e)}"
 
-    # ✅ FIXED: Tutup kurungan JSON di sini
     return {
-        "total_forecast": total_predicted_supply,
+        "forecast_type": "Price (RM/kg)",
+        "average_price": average_predicted_price,
+        "min_price": min_predicted_price,
+        "max_price": max_predicted_price,
         "ai_analysis": ai_insight,
         "daily_data": results
     }
 
-# --- DIAGNOSTIK: CHECK MODEL AVAILABLE ---
+# --- CHECKER ---
 @app.get("/check-models")
 def check_models():
     try:
         senarai_model = []
-        # Kita tanya Google: "Apa model yang kau ada?"
         for m in genai.list_models():
             if 'generateContent' in m.supported_generation_methods:
                 senarai_model.append(m.name)
         return {"status": "OK", "models": senarai_model}
     except Exception as e:
         return {"status": "ERROR", "detail": str(e)}
-
-
-
