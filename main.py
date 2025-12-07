@@ -36,7 +36,15 @@ class ForecastRequest(BaseModel):
 
 @app.get("/")
 def read_root():
-    return {"status": "Server FAMA Online", "model_loaded": model is not None}
+    # Kita check kunci ada ke tak (Debug Sensor)
+    key_check = os.environ.get("GEMINI_API_KEY")
+    
+    return {
+        "status": "Server FAMA Online", 
+        "model_loaded": model is not None,
+        "gemini_key_status": "DITEMUI ✅" if key_check else "HILANG / NULL ❌",
+        "key_preview": key_check[:5] + "..." if key_check else "N/A" # Tunjuk 5 huruf depan je
+    }
 
 @app.post("/predict")
 def predict_supply(req: ForecastRequest):
@@ -85,4 +93,5 @@ def predict_supply(req: ForecastRequest):
         "total_forecast": total_predicted_supply,
         "ai_analysis": ai_insight,
         "daily_data": results
+
     }
