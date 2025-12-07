@@ -6,7 +6,7 @@ from PIL import Image # (Pilihan) Import ni kalau nak advanced sikit
 
 # --- KONFIGURASI HALAMAN ---
 st.set_page_config(
-    page_title="FAMA AI Forecasting",
+    page_title="MODEL ANALISA HARGA BAWANG INDIA",
     page_icon="📊", # Nanti kita boleh tukar ni jadi logo juga
     layout="wide"
 )
@@ -98,3 +98,4 @@ if predict_btn:
 else:
 
     st.info("👈 Sila tekan butang 'Jana Ramalan' di sebelah kiri untuk bermula.")
+
