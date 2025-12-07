@@ -2,18 +2,34 @@ import streamlit as st
 import pandas as pd
 import requests
 import plotly.express as px
+from PIL import Image # (Pilihan) Import ni kalau nak advanced sikit
 
 # --- KONFIGURASI HALAMAN ---
 st.set_page_config(
     page_title="FAMA AI Forecasting",
-    page_icon="📊",
+    page_icon="📊", # Nanti kita boleh tukar ni jadi logo juga
     layout="wide"
 )
+
+# =========================================
+# ▶️ TAMBAH BAHAGIAN NI (LOGO AREA) ◀️
+# =========================================
+try:
+    # Ganti 'logo_fama.png' dengan nama file sebenar kau
+    # width=250 tu saiz dia, boleh adjust besar/kecil
+    st.image("logo_fama.png", width=250) 
+except FileNotFoundError:
+    # Backup plan kalau gambar tak jumpa, dia tak crash
+    st.warning("Logo FAMA tidak dijumpai. Sila upload 'logo_fama.png'.")
+# =========================================
+
 
 # --- TAJUK & HEADER ---
 st.title("🌾 FAMA Intelligent Forecasting Dashboard")
 st.markdown("Sistem peramalan harga pasaran menggunakan **Prophet (Time-series)** dan **Gemini (AI Reasoning)**.")
 st.divider()
+
+# ... (sambungan coding yang lain kat bawah) ...
 
 # --- SIDEBAR (INPUT) ---
 with st.sidebar:
@@ -80,4 +96,5 @@ if predict_btn:
             st.error(f"Terjadi ralat sambungan: {e}")
 
 else:
+
     st.info("👈 Sila tekan butang 'Jana Ramalan' di sebelah kiri untuk bermula.")
