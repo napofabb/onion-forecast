@@ -100,7 +100,20 @@ def predict_supply(req: ForecastRequest):
         "ai_analysis": ai_insight,
         "daily_data": results
 
+# --- DEBUGGING ENDPOINT: CHECK MODEL AVAILABLE ---
+@app.get("/check-models")
+def list_google_models():
+    try:
+        available_models = []
+        for m in genai.list_models():
+            if 'generateContent' in m.supported_generation_methods:
+                available_models.append(m.name)
+        return {"status": "OK", "models": available_models}
+    except Exception as e:
+        return {"status": "ERROR", "detail": str(e)}
+
     }
+
 
 
 
