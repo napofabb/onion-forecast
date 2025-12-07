@@ -10,9 +10,9 @@ import google.generativeai as genai
 app = FastAPI()
 
 # --- CONFIGURATION ---
-SUPABASE_URL = os.environ.get("https://hnqwsghjmpnhviycdkpa.supabase.co")
-SUPABASE_KEY = os.environ.get("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhucXdzZ2hqbXBuaHZpeWNka3BhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjUwOTAwNzUsImV4cCI6MjA4MDY2NjA3NX0.zQQ5rLlg-OfnO9E6pZMvnk5A0d85X9FFh5KLgroUdtU")
-GEMINI_API_KEY = os.environ.get("AIzaSyDzzUdWTO_x2u1pOUy1ue1OlwougQJZ64U")
+SUPABASE_URL = os.environ.get("SUPABASE_URL")
+SUPABASE_KEY = os.environ.get("SUPABASE_KEY")
+GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
 
 # --- LOAD MODEL ---
 try:
@@ -108,5 +108,8 @@ def check_models():
         senarai_model = []
         # Kita tanya Google: "Apa model yang kau ada?"
         for m in genai.list_models():
-            if '
-
+            if 'generateContent' in m.supported_generation_methods:
+                senarai_model.append(m.name)
+        return {"status": "OK", "models": senarai_model}
+    except Exception as e:
+        return {"status": "ERROR", "detail": str(e)}
