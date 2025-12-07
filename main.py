@@ -82,7 +82,7 @@ def predict_supply(req: ForecastRequest):
     ai_insight = "Gemini key not found."
     if GEMINI_API_KEY:
         try:
-            gemini_model = genai.GenerativeModel('gemini-1.5-flash')
+            gemini_model = genai.GenerativeModel('gemini-pro')
             prompt = f"""
             Sebagai Data Analyst FAMA, analisa ramalan ini:
             - Item: Bawang Besar India
@@ -101,5 +101,6 @@ def predict_supply(req: ForecastRequest):
         "daily_data": results
 
     }
+
 
 
