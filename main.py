@@ -36,14 +36,20 @@ class ForecastRequest(BaseModel):
 
 @app.get("/")
 def read_root():
-    # Kita check kunci ada ke tak (Debug Sensor)
-    key_check = os.environ.get("GEMINI_API_KEY")
+    import os
+    
+    # 1. Kita ambil semua senarai KUNCI (Key) yang server nampak
+    # Kita tak ambil value demi keselamatan, cuma nak tengok nama variable
+    all_keys = list(os.environ.keys())
+    
+    # 2. Kita cari variable yang ada perkataan "GEMINI"
+    gemini_related = [k for k in all_keys if "GEMINI" in k.upper()]
     
     return {
-        "status": "Server FAMA Online", 
-        "model_loaded": model is not None,
-        "gemini_key_status": "DITEMUI ✅" if key_check else "HILANG / NULL ❌",
-        "key_preview": key_check[:5] + "..." if key_check else "N/A" # Tunjuk 5 huruf depan je
+        "status": "MODE X-RAY SERVER 🧐",
+        "adakah_kunci_ditemui": "YA" if os.environ.get("GEMINI_API_KEY") else "TIDAK",
+        "variable_gemini_yang_dijumpai": gemini_related,
+        "senarai_penuh_variable": all_keys
     }
 
 @app.post("/predict")
@@ -95,3 +101,4 @@ def predict_supply(req: ForecastRequest):
         "daily_data": results
 
     }
+
